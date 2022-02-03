@@ -7,7 +7,7 @@
 # --tags unavailable, solution update awscli to latest version: https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html#cliv2-linux-upgrade
 # aws cli version used 2.3.3
 
-import boto3
+import boto3,json
 
 #AWS account
 session = boto3.Session(profile_name='cko-playground')
@@ -110,19 +110,24 @@ print(home_directory)
 print(role_arn)
 print(policy_arn)
 print("\n")
+
+
 # Creates Folder on S3 Bucket
 print(">> Creating Folder on S3 Bucket <<")
-#s3 = session.client('s3')
-#s3.put_object(Bucket='vellen-sftp-test',Key=s3folder)
+s3 = session.client('s3')
+s3.put_object(Bucket='vellen-sftp-test',Key=s3folder)
+
+s3file=s3.get_object(Bucket='vellen-sftp-test',Key='policy.json')
+json_content = s3file["Body"].read().decode()
+
 
 # Creates User on AWS Transfer Family
 print("\n")
 print(">> Creating user on AWS Transfer Family <<")
 transfer = session.client('transfer')
-policy_file='./policy.json'
 response = transfer.create_user(
     HomeDirectory=home_directory,
-    Policy= policy_file,
+    Policy= json_content,
     Role=role_arn,
     ServerId= playground_server_id,
     SshPublicKeyBody=public_key,
@@ -157,4 +162,4 @@ print(response)
 # Creates route 53 records 
 
 print(">> Creating Route 53 record <<")
-dns=playground_server_id+".server.transfer.eu-west-1.amazonaws.com"
+dns=playground_server_id +".server.transfer.eu-west-1.amazonaws.com"
